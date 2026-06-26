@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>繁體中文字冒險遊戲</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="homeScreen" class="screen active">
+      <h1>繁體中文字冒險</h1>
+      <div class="home-stage">
+        <div class="tv-frame">
+          <div class="tv-screen" id="homeTvScreen">
+            <div class="cloud-panel">
+              <div class="panel-title">開始設定</div>
+              <div class="option-group">
+                <div class="option-row">
+                  <div class="option-label">角色：</div>
+                  <label><input type="radio" name="character" value="瑪利歐" checked> 瑪利歐</label>
+                  <label><input type="radio" name="character" value="路易吉"> 路易吉</label>
+                </div>
+                <div class="option-row">
+                  <div class="option-label">HP 體力：</div>
+                  <label><input type="radio" name="hpMode" value="10" checked> 充足（10點HP）</label>
+                  <label><input type="radio" name="hpMode" value="5"> 較少（5點HP）</label>
+                </div>
+              </div>
+              <button id="startBtn">開始！</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div id="battleTv">
+        <div id="gameUi">
+          <div class="top-bar">
+            <div id="playerHp" class="hp-bar"></div>
+            <div id="stageInfo"></div>
+            <div id="enemyHp" class="hp-bar enemy"></div>
+          </div>
+          <div class="question-box">
+            <div id="turnLabel"></div>
+            <div id="timerText"></div>
+            <div id="questionText" style="text-align: center;"></div>
+            <div id="optionsGrid"></div>
+          </div>
+        </div>
+        <div id="battlefield">
+          <div id="battleBackground"></div>
+          <div id="fireworksLayer"></div>
+          <div id="confettiLayer"></div>
+          <div id="playerSprite" class="sprite"></div>
+          <div id="enemySprite" class="sprite enemy"></div>
+          <img id="projectile" alt="projectile" />
+          <button id="giveUpBtn" class="give-up-btn">放棄</button>
+          <div id="resultBanner"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
