@@ -202,7 +202,7 @@ input[type="radio"] { transform: scale(1.15); margin-right: 6px; }
   position: absolute;
   width: 240px;
   height: 240px;
-  bottom: 20px;
+  bottom: 5px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -222,7 +222,7 @@ input[type="radio"] { transform: scale(1.15); margin-right: 6px; }
   pointer-events: none;
   object-fit: contain;
   z-index: 6;
-  bottom: 0px;
+  bottom: 5px;
   top: auto;
 }
 

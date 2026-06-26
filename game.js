@@ -101,8 +101,8 @@ const characterCSV = `character,hp,atk,stand-image,walk-image,walk-sound,jump-im
 庫巴,10,2,bowser_stand.png,bowser_walk.png,walk.mp3,bowser_attack.png,jump.mp3,bowser_attack.png,big_fireball.mp3,big_fireball.png`;
 
 const stageMap = {1:'stage1.png',2:'stage2.png',3:'stage3.png',4:'stage4.png',5:'stage5.png'};
-const stageChoices = {1:3,2:3,3:4,4:4,5:5};
-const turnSeconds = 20;
+const stageChoices = {1:3,2:3,3:4,4:6,5:8};
+const turnSeconds = 25;
 const audioBase = 'assets/';
 const enemyOrder = ['慢慢龜', '飛行龜', '炮彈刺客', '庫巴七人眾', '庫巴'];
 const confettiColors = ['#ff4d6d', '#ffd93d', '#6bcBef', '#8aff80', '#c77dff', '#ff8fab'];
@@ -350,14 +350,14 @@ async function animateProjectile(attackerSide, projectileImg, hitTargetEl, hit =
   if (attackerSide === 'player') {
     p.style.left = '210px';
     p.style.right = 'auto';
-    p.style.bottom = '20px';
+    p.style.bottom = '5px';
     p.style.top = 'auto';
     p.style.transform = 'translate(0, 0)';
     requestAnimationFrame(() => p.classList.add('projectile-fly-right'));
   } else {
     p.style.right = '210px';
     p.style.left = 'auto';
-    p.style.bottom = '20px';
+    p.style.bottom = '5px';
     p.style.top = 'auto';
     p.style.transform = 'translate(0, 0)';
     requestAnimationFrame(() => p.classList.add('projectile-fly-left'));
