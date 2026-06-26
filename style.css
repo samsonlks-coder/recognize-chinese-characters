@@ -202,7 +202,7 @@ input[type="radio"] { transform: scale(1.15); margin-right: 6px; }
   position: absolute;
   width: 240px;
   height: 240px;
-  bottom: 5px;
+  bottom: 0px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -347,7 +347,7 @@ input[type="radio"] { transform: scale(1.15); margin-right: 6px; }
 @media (max-width: 900px) {
   .tv-frame, #battleTv, #battlefield { aspect-ratio: 16 / 9; }
   .cloud-panel { width: 86%; }
-  .sprite { width: 220px; height: 220px; bottom: 60px; }
+  .sprite { width: 220px; height: 220px; bottom: 20px; }
   #playerSprite { left: 12px; }
   #enemySprite { right: 12px; }
   .option-btn { min-height: 56px; }
