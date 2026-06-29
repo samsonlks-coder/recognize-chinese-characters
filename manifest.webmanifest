@@ -1,5 +1,4 @@
 {
-  "id": "/",
   "name": "繁體中文字冒險遊戲",
   "short_name": "中文字冒險",
   "description": "以繁體中文答題進行的冒險戰鬥遊戲。",
@@ -8,7 +7,6 @@
   "background_color": "#000000",
   "theme_color": "#8b5cf6",
   "lang": "zh-Hant",
-  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-192.png",
