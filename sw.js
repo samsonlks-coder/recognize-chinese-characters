@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
   "./manifest.webmanifest",
 
   "./assets/stage1.png",
+  "./assets/stage2.png",
   "./assets/stage3.png",
   "./assets/stage4.png",
   "./assets/stage5.png",
