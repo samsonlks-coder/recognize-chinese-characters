@@ -178,7 +178,6 @@ input[type="radio"] { transform: scale(1.15); margin-right: 6px; }
   background: #fff;
   cursor: pointer;
   min-height: 48px;
-  max-width: 150px;
 }
 .option-btn:hover { background: #fff8c9; }
 .option-btn:disabled { opacity: .6; cursor: default; }
