@@ -377,19 +377,26 @@ const emojiCSV = `emoji,name
 const characterCSV = `character,hp,atk,stand-image,walk-image,walk-sound,jump-image,jump-sound,attack-image,attack-sound,attack-projectile
 瑪利歐,0,1,mario_stand.png,mario_walk.png,walk.mp3,mario_jump.png,jump.mp3,mario_attack.png,fireball.mp3,fireball.png
 路易吉,0,1,luigi_stand.png,luigi_walk.png,walk.mp3,luigi_jump.png,jump.mp3,luigi_attack.png,fireball.mp3,fireball.png
-慢慢龜,3,1,koopa_stand.png,koopa_walk.png,walk.mp3,koopa_attack.png,jump.mp3,koopa_attack.png,shell.mp3,redshell.png
-飛行龜,4,1,paratroopa_stand.png,paratroopa_walk.png,walk.mp3,paratroopa_attack.png,jump.mp3,paratroopa_attack.png,shell.mp3,greenshell.png
-炮彈刺客,5,1,bulletbill_stand.png,bulletbill_walk.png,walk.mp3,bulletbill_attack.png,jump.mp3,bulletbill_attack.png,bulletbill.mp3,bulletbill.png
-庫巴七人眾,8,1,koopaling_stand.png,koopaling_walk.png,walk.mp3,koopaling_attack.png,jump.mp3,koopaling_attack.png,fireball.mp3,purple_fireball.png
-庫巴,10,2,bowser_stand.png,bowser_walk.png,walk.mp3,bowser_attack.png,jump.mp3,bowser_attack.png,big_fireball.mp3,big_fireball.png`;
+慢慢龜,3,1,koopa_stand.png,koopa_walk.png,walk.mp3,koopa_jump.png,jump.mp3,koopa_attack.png,shell.mp3,redshell.png
+飛行龜,4,1,paratroopa_stand.png,paratroopa_walk.png,walk.mp3,paratroopa_jump.png,jump.mp3,paratroopa_attack.png,shell.mp3,greenshell.png
+炮彈刺客,5,1,bulletbill_stand.png,bulletbill_walk.png,walk.mp3,bulletbill_jump.png,jump.mp3,bulletbill_attack.png,bulletbill.mp3,bulletbill.png
+庫巴七人眾,8,1,koopaling_stand.png,koopaling_walk.png,walk.mp3,koopaling_jump.png,jump.mp3,koopaling_attack.png,fireball.mp3,purple_fireball.png
+庫巴,10,2,bowser_stand.png,bowser_walk.png,walk.mp3,bowser_jump.png,jump.mp3,bowser_attack.png,fireball.mp3,big_fireball.png`;
 
-const stageMap = {1:'stage1.png',2:'stage2.png',3:'stage3.png',4:'stage4.png',5:'stage5.png'};
-const stageChoices = {1:3,2:3,3:4,4:6,5:8};
-const turnSeconds = 25;
-const audioBase = 'assets/';
+const stageMap = {
+  1: 'stage1.png',
+  2: 'stage1.png',
+  3: 'stage3.png',
+  4: 'stage4.png',
+  5: 'stage5.png'
+};
+
+const stageChoices = { 1: 3, 2: 3, 3: 4, 4: 5, 5: 6 };
+const turnSeconds = 20;
+const assetBase = 'assets/';
 const enemyOrder = ['慢慢龜', '飛行龜', '炮彈刺客', '庫巴七人眾', '庫巴'];
-const confettiColors = ['#ff4d6d', '#ffd93d', '#6bcBef', '#8aff80', '#c77dff', '#ff8fab'];
-const fireworkColors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ffffff'];
+const confettiColors = ['#ff4d6d', '#ffd93d', '#6bcbef', '#8aff80', '#c77dff', '#ff8500'];
+const fireworkColors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#c77dff', '#ffffff'];
 
 const state = {
   emojis: [],
@@ -409,31 +416,37 @@ const state = {
   busy: false,
   audioEnabled: true,
   ended: false,
-  fireworkTimer: null,
-  currentRunWon: false
+  fireworkTimer: null
 };
 
 const els = {};
 
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
-  const headers = lines[0].split(',');
+  const headers = lines[0].split(',').map(h => h.trim());
   return lines.slice(1).map(line => {
     const parts = line.split(',');
     const obj = {};
-    headers.forEach((h, i) => obj[h] = parts[i]);
+    headers.forEach((h, i) => {
+      obj[h] = (parts[i] || '').trim();
+    });
     return obj;
   });
 }
+
 function byId(id) { return document.getElementById(id); }
 function qs(sel) { return document.querySelector(sel); }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function shuffle(arr) { return arr.map(v => [Math.random(), v]).sort((a,b)=>a[0]-b[0]).map(x => x[1]); }
+function shuffle(arr) {
+  return arr
+    .map(v => [Math.random(), v])
+    .sort((a, b) => a[0] - b[0])
+    .map(pair => pair[1]);
+}
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 function getChar(name) { return state.characters.find(c => c.character === name); }
-function imgUrl(name) { return `assets/${name}`; }
-function soundUrl(name) { return `${audioBase}${name}`; }
+function assetUrl(name) { return `${assetBase}${name}`; }
 
 function preloadImage(src) {
   return new Promise(resolve => {
@@ -443,6 +456,7 @@ function preloadImage(src) {
     img.src = src;
   });
 }
+
 function preloadAudio(src) {
   return new Promise(resolve => {
     const a = new Audio();
@@ -451,35 +465,67 @@ function preloadAudio(src) {
     a.addEventListener('canplaythrough', () => resolve(true), { once: true });
     a.addEventListener('error', () => resolve(false), { once: true });
     a.load();
-    setTimeout(() => resolve(false), 2500);
+    setTimeout(() => resolve(false), 2000);
   });
 }
+
 async function preloadAssets() {
   const imageNames = new Set([
-    'stage1.png','stage3.png','stage4.png','stage5.png',
-    ...state.characters.flatMap(c => [c['stand-image'], c['walk-image'], c['jump-image'], c['attack-image'], c['attack-projectile']].filter(Boolean))
+    'stage1.png', 'stage3.png', 'stage4.png', 'stage5.png',
+    ...state.characters.flatMap(c => [
+      c['stand-image'],
+      c['walk-image'],
+      c['jump-image'],
+      c['attack-image'],
+      c['attack-projectile']
+    ]).filter(Boolean)
   ]);
+
   const audioNames = new Set([
-    ...state.characters.flatMap(c => [c['walk-sound'], c['jump-sound'], c['attack-sound']].filter(Boolean)),
-    'correct.mp3','wrong.mp3','win.mp3','lose.mp3'
+    ...state.characters.flatMap(c => [
+      c['walk-sound'],
+      c['jump-sound'],
+      c['attack-sound']
+    ]).filter(Boolean),
+    'correct.mp3', 'wrong.mp3', 'win.mp3', 'lose.mp3'
   ]);
+
   await Promise.all([
-    ...[...imageNames].map(n => preloadImage(imgUrl(n))),
-    ...[...audioNames].map(n => preloadAudio(soundUrl(n)))
+    ...[...imageNames].map(n => preloadImage(assetUrl(n))),
+    ...[...audioNames].map(n => preloadAudio(assetUrl(n)))
   ]);
+}
+
+function playAudio(name) {
+  if (!state.audioEnabled || !name) return;
+  const a = new Audio(assetUrl(name));
+  a.volume = 0.85;
+  a.play().catch(() => {});
+}
+
+function playTurnSound(side, kind) {
+  const ch = getChar(side === 'player' ? state.playerName : state.enemyName);
+  if (!ch) return;
+  if (kind === 'walk') playAudio(ch['walk-sound']);
+  if (kind === 'jump') playAudio(ch['jump-sound']);
+  if (kind === 'attack') playAudio(ch['attack-sound']);
 }
 
 function stopTimer() {
   if (state.timer) clearInterval(state.timer);
   state.timer = null;
 }
+
 function stopWinEffects() {
   if (state.fireworkTimer) clearInterval(state.fireworkTimer);
   state.fireworkTimer = null;
   if (els.fireworksLayer) els.fireworksLayer.innerHTML = '';
   if (els.confettiLayer) els.confettiLayer.innerHTML = '';
-  if (els.playerSprite) els.playerSprite.classList.remove('win-jump-loop', 'walk-center');
+  if (els.playerSprite) {
+    els.playerSprite.classList.remove('win-jump-loop', 'walk-center', 'walk-across');
+  }
 }
+
 function resetBattleVisuals() {
   stopWinEffects();
   if (els.enemySprite) {
@@ -487,251 +533,274 @@ function resetBattleVisuals() {
     els.enemySprite.style.visibility = 'visible';
     els.enemySprite.style.opacity = '1';
     els.enemySprite.style.transform = '';
-    els.enemySprite.classList.remove('fade-out');
+    els.enemySprite.classList.remove('fade-out', 'hit-flash');
   }
   if (els.playerSprite) {
     els.playerSprite.style.display = 'block';
     els.playerSprite.style.visibility = 'visible';
     els.playerSprite.style.opacity = '1';
     els.playerSprite.style.transform = '';
-    els.playerSprite.classList.remove('win-jump-loop', 'walk-across', 'walk-center');
-    els.playerSprite.style.left = window.innerWidth <= 900 ? '12px' : '24px';
+    els.playerSprite.style.left = '6%';
+    els.playerSprite.classList.remove('win-jump-loop', 'walk-across', 'walk-center', 'hit-flash');
   }
-  if (els.projectile) els.projectile.style.display = 'none';
+  if (els.projectile) {
+    els.projectile.style.display = 'none';
+    els.projectile.style.transition = 'none';
+  }
 }
+
 function setBg(stage) {
-  els.battleBg.style.backgroundImage = `url('${imgUrl(stageMap[stage] || 'stage1.png')}')`;
+  const file = stageMap[stage] || 'stage1.png';
+  els.battleBg.style.backgroundImage = `url('${assetUrl(file)}')`;
 }
+
 function setSprite(el, img) {
-  el.style.backgroundImage = `url('${imgUrl(img)}')`;
+  if (img) el.style.backgroundImage = `url('${assetUrl(img)}')`;
 }
-function setProjectile(img) {
-  els.projectile.src = imgUrl(img || 'fireball.png');
-}
+
 function setHpDisplay(el, current, max) {
-  el.innerHTML = Array.from({ length: max }, (_, i) => `<span>${i < current ? '❤️' : '🩶'}</span>`).join('');
+  el.innerHTML = Array.from({ length: max }, (_, i) =>
+    `<span>${i < current ? '❤️' : '🩶'}</span>`
+  ).join('');
 }
+
 function updateHp() {
+  els.playerNameTag.textContent = state.playerName;
+  els.enemyNameTag.textContent = state.enemyName;
   setHpDisplay(els.playerHp, state.playerHp, state.playerHpMax);
   setHpDisplay(els.enemyHp, state.enemyHp, state.enemyHpMax);
 }
+
 function updateStageInfo() {
-  els.stageInfo.textContent = `第 ${state.stage} 關 / ${stageChoices[state.stage]} 個答案`;
+  els.stageInfo.textContent = `第 ${state.stage} 關 / ${stageChoices[state.stage]} 選 1`;
 }
+
 function setScreen(screen) {
   els.homeScreen.classList.toggle('active', screen === 'home');
   els.gameScreen.classList.toggle('active', screen === 'game');
 }
-function banner(text, ms = 900) {
+
+function banner(text, ms = 1000) {
   if (!els.banner) return;
   els.banner.textContent = text;
-  els.banner.style.display = 'block';
-  els.banner.style.opacity = '1';
   els.banner.classList.add('show');
   clearTimeout(banner.t);
   banner.t = setTimeout(() => {
-    if (els.banner) {
-      els.banner.style.opacity = '0';
-      els.banner.classList.remove('show');
-    }
+    if (els.banner) els.banner.classList.remove('show');
   }, ms);
 }
-function currentPlayer() { return state.playerName; }
-function currentEnemy() { return state.enemyName; }
-function playAudio(name) {
-  if (!state.audioEnabled || !name) return;
-  const a = new Audio(soundUrl(name));
-  a.volume = 0.85;
-  a.play().catch(() => {});
-}
+
 function applyStandings() {
-  const p = getChar(currentPlayer());
-  const e = getChar(currentEnemy());
+  const p = getChar(state.playerName);
+  const e = getChar(state.enemyName);
   if (p) setSprite(els.playerSprite, p['stand-image']);
   if (e) setSprite(els.enemySprite, e['stand-image']);
   els.enemySprite.style.display = 'block';
   els.enemySprite.style.visibility = 'visible';
   els.enemySprite.style.opacity = '1';
 }
+
 function buildQuestion(count) {
   const correct = rand(state.emojis);
-  const wrong = shuffle(state.emojis.filter(x => x.name !== correct.name).map(x => x.name)).slice(0, count - 1);
-  return { emoji: correct.emoji, answer: correct.name, options: shuffle([correct.name, ...wrong]) };
+  const wrongPool = state.emojis
+    .filter(x => x.name !== correct.name)
+    .map(x => x.name);
+  const wrong = shuffle(wrongPool).slice(0, count - 1);
+  return {
+    emoji: correct.emoji,
+    answer: correct.name,
+    options: shuffle([correct.name, ...wrong])
+  };
 }
+
 function renderQuestion(q) {
   state.currentQuestion = q;
-  els.questionText.textContent = `${q.emoji} `;
+  els.questionEmoji.textContent = q.emoji;
+  els.questionText.textContent = '請選出正確的中文名字';
   els.options.innerHTML = '';
+  els.options.className = `options-grid cols-${q.options.length}`;
+
   q.options.forEach(opt => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'option-btn';
     btn.textContent = opt;
     btn.disabled = !state.canChoose || state.busy;
-    btn.addEventListener('click', () => chooseAnswer(opt));
+    btn.addEventListener('click', () => chooseAnswer(opt, btn));
     els.options.appendChild(btn);
   });
 }
+
 function refreshOptionState() {
   els.options.querySelectorAll('button').forEach(btn => {
     btn.disabled = !state.canChoose || state.busy || state.ended;
   });
 }
+
+function updateTimerUI() {
+  els.timerText.textContent = `⏱ ${state.secondsLeft} 秒`;
+  const pct = clamp((state.secondsLeft / turnSeconds) * 100, 0, 100);
+  els.timerFill.style.width = `${pct}%`;
+  els.timerFill.classList.toggle('urgent', state.secondsLeft <= 4);
+}
+
 function startTurnCountdown() {
   stopTimer();
   state.secondsLeft = turnSeconds;
-  els.timer.textContent = `剩餘時間：${state.secondsLeft} 秒`;
+  updateTimerUI();
+
   state.timer = setInterval(() => {
     state.secondsLeft -= 1;
-    els.timer.textContent = `剩餘時間：${state.secondsLeft} 秒`;
+    updateTimerUI();
     if (state.secondsLeft <= 0) {
       stopTimer();
       timeoutChoice();
     }
   }, 1000);
 }
-function setTurnLabel(text) { els.turnLabel.textContent = text; }
-function resetSpriteSide(el) {
-  el.style.transition = 'none';
-  el.style.transform = '';
-  el.offsetHeight;
-  el.style.transition = '';
+
+function setTurnLabel(text, isEnemy = false) {
+  els.turnLabel.textContent = text;
+  els.turnLabel.classList.toggle('enemy-turn', isEnemy);
 }
+
 async function flashHit(el) {
   el.classList.add('hit-flash');
-  await sleep(800);
+  await sleep(750);
   el.classList.remove('hit-flash');
 }
+
 function launchConfetti() {
   if (!els.confettiLayer) return;
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 24; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
     piece.style.left = `${Math.random() * 100}%`;
-    piece.style.top = `${-20 - Math.random() * 80}px`;
+    piece.style.top = `${-15 - Math.random() * 40}px`;
     piece.style.background = rand(confettiColors);
-    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-    piece.style.animationDuration = `${2.2 + Math.random() * 1.2}s`;
+    piece.style.animationDuration = `${1.8 + Math.random() * 0.9}s`;
     els.confettiLayer.appendChild(piece);
-    setTimeout(() => piece.remove(), 3200);
+    setTimeout(() => piece.remove(), 2800);
   }
 }
+
 function spawnFirework() {
   if (!els.fireworksLayer) return;
   const fw = document.createElement('div');
   fw.className = 'firework';
-  fw.style.left = `${12 + Math.random() * 76}%`;
-  fw.style.top = `${12 + Math.random() * 48}%`;
+  fw.style.left = `${15 + Math.random() * 70}%`;
+  fw.style.top = `${15 + Math.random() * 45}%`;
   fw.style.color = rand(fireworkColors);
   els.fireworksLayer.appendChild(fw);
-  setTimeout(() => fw.remove(), 1300);
-}
-async function animateProjectile(attackerSide, projectileImg, hitTargetEl, hit = false, dodge = null) {
-  const p = els.projectile;
-  setProjectile(projectileImg);
-  p.style.display = 'block';
-  p.classList.remove('projectile-fly-left', 'projectile-fly-right');
-  if (attackerSide === 'player') {
-    p.style.left = '210px';
-    p.style.right = 'auto';
-    p.style.bottom = '5px';
-    p.style.top = 'auto';
-    p.style.transform = 'translate(0, 0)';
-    requestAnimationFrame(() => p.classList.add('projectile-fly-right'));
-  } else {
-    p.style.right = '210px';
-    p.style.left = 'auto';
-    p.style.bottom = '5px';
-    p.style.top = 'auto';
-    p.style.transform = 'translate(0, 0)';
-    requestAnimationFrame(() => p.classList.add('projectile-fly-left'));
-  }
-  await sleep(650);
-  p.style.display = 'none';
-  p.classList.remove('projectile-fly-left', 'projectile-fly-right');
-  if (hit) await flashHit(hitTargetEl);
-  if (dodge) await dodge();
-}
-function playTurnSound(side, kind) {
-  const ch = getChar(side === 'player' ? currentPlayer() : currentEnemy());
-  if (!ch) return;
-  if (kind === 'walk') playAudio(ch['walk-sound']);
-  if (kind === 'jump') playAudio(ch['jump-sound']);
-  if (kind === 'attack') playAudio(ch['attack-sound']);
-}
-async function setPlayerPose(pose) {
-  const ch = getChar(currentPlayer());
-  if (!ch) return;
-  if (pose === 'stand') setSprite(els.playerSprite, ch['stand-image']);
-  if (pose === 'walk') setSprite(els.playerSprite, ch['walk-image'] || ch['stand-image']);
-  if (pose === 'jump') setSprite(els.playerSprite, ch['jump-image'] || ch['stand-image']);
-  if (pose === 'attack') setSprite(els.playerSprite, ch['attack-image'] || ch['stand-image']);
-}
-async function setEnemyPose(pose) {
-  const ch = getChar(currentEnemy());
-  if (!ch) return;
-  if (pose === 'stand') setSprite(els.enemySprite, ch['stand-image']);
-  if (pose === 'walk') setSprite(els.enemySprite, ch['walk-image'] || ch['stand-image']);
-  if (pose === 'jump') setSprite(els.enemySprite, ch['jump-image'] || ch['stand-image']);
-  if (pose === 'attack') setSprite(els.enemySprite, ch['attack-image'] || ch['stand-image']);
-}
-async function playerJumpUp() {
-  const p = els.playerSprite;
-  p.style.transition = 'transform 0.25s ease';
-  p.style.transform = 'translateY(-200px)';
-  await sleep(350);
-  p.style.transform = 'translateY(0)';
-  await sleep(250);
-}
-async function enemyJumpUp() {
-  const e = els.enemySprite;
-  e.style.transition = 'transform 0.25s ease';
-  e.style.transform = 'translateY(-200px)';
-  await sleep(350);
-  e.style.transform = 'translateY(0)';
-  await sleep(250);
-}
-async function playerAttack(success) {
-  playTurnSound('player', 'attack');
-  await setPlayerPose('attack');
-  await animateProjectile(
-    'player',
-    getChar(currentPlayer())['attack-projectile'],
-    els.enemySprite,
-    success,
-    success ? null : async () => {
-      playTurnSound('enemy', 'jump');
-      await setEnemyPose('jump');
-      await enemyJumpUp();
-      await setEnemyPose('stand');
-    }
-  );
-  await setPlayerPose('stand');
-}
-async function enemyAttack(success) {
-  playTurnSound('enemy', 'attack');
-  await setEnemyPose('attack');
-  await animateProjectile(
-    'enemy',
-    getChar(currentEnemy())['attack-projectile'],
-    els.playerSprite,
-    success,
-    success ? null : async () => {
-      playTurnSound('player', 'jump');
-      await setPlayerPose('jump');
-      await playerJumpUp();
-      await setPlayerPose('stand');
-    }
-  );
-  await setEnemyPose('stand');
+  setTimeout(() => fw.remove(), 1200);
 }
 
-async function chooseAnswer(opt) {
+async function animateProjectile(attackerSide, projectileImg, hitTargetEl, hit = false, dodge = null) {
+  const p = els.projectile;
+  p.src = assetUrl(projectileImg || 'fireball.png');
+  p.style.transition = 'none';
+  p.style.display = 'block';
+
+  if (attackerSide === 'player') {
+    p.style.left = '18%';
+    p.style.right = 'auto';
+    p.offsetHeight;
+    p.style.transition = 'left 0.62s linear';
+    p.style.left = '72%';
+  } else {
+    p.style.left = '72%';
+    p.style.right = 'auto';
+    p.offsetHeight;
+    p.style.transition = 'left 0.62s linear';
+    p.style.left = '18%';
+  }
+
+  if (!hit && dodge) {
+    // Delayed by 200ms (from 240ms to 440ms) so the character leaps right before impact
+    await sleep(440);
+    const dodgePromise = dodge();
+    await sleep(180);
+    p.style.display = 'none';
+    await dodgePromise;
+    return;
+  }
+
+  await sleep(620);
+  p.style.display = 'none';
+  if (hit) await flashHit(hitTargetEl);
+}
+
+function setPose(side, pose) {
+  const ch = getChar(side === 'player' ? state.playerName : state.enemyName);
+  const el = side === 'player' ? els.playerSprite : els.enemySprite;
+  if (!ch || !el) return;
+  const map = {
+    stand: ch['stand-image'],
+    walk: ch['walk-image'] || ch['stand-image'],
+    jump: ch['jump-image'] || ch['stand-image'],
+    attack: ch['attack-image'] || ch['stand-image']
+  };
+  setSprite(el, map[pose] || ch['stand-image']);
+}
+
+async function jumpDodge(side) {
+  const el = side === 'player' ? els.playerSprite : els.enemySprite;
+  if (!el) return;
+
+  playTurnSound(side, 'jump');
+  setPose(side, 'jump');
+  el.classList.remove('dodge-jump');
+  el.offsetHeight;
+  el.classList.add('dodge-jump');
+
+  await sleep(620);
+  el.classList.remove('dodge-jump');
+  setPose(side, 'stand');
+}
+
+async function playerAttack(success) {
+  playTurnSound('player', 'attack');
+  setPose('player', 'attack');
+  await animateProjectile(
+    'player',
+    getChar(state.playerName)['attack-projectile'],
+    els.enemySprite,
+    success,
+    success ? null : () => jumpDodge('enemy')
+  );
+  setPose('player', 'stand');
+}
+
+async function enemyAttack(success) {
+  playTurnSound('enemy', 'attack');
+  setPose('enemy', 'attack');
+  await animateProjectile(
+    'enemy',
+    getChar(state.enemyName)['attack-projectile'],
+    els.playerSprite,
+    success,
+    success ? null : () => jumpDodge('player')
+  );
+  setPose('enemy', 'stand');
+}
+
+function highlightButtons(clickedBtn, isCorrect) {
+  const answer = state.currentQuestion.answer;
+  els.options.querySelectorAll('button').forEach(btn => {
+    if (btn.textContent === answer) btn.classList.add('correct');
+    else if (btn === clickedBtn && !isCorrect) btn.classList.add('wrong');
+  });
+}
+
+async function chooseAnswer(opt, btn) {
   if (!state.canChoose || state.busy || state.ended) return;
   state.canChoose = false;
+  state.busy = true;
   refreshOptionState();
   stopTimer();
+
   const isCorrect = opt === state.currentQuestion.answer;
-  state.busy = true;
+  highlightButtons(btn, isCorrect);
 
   if (isCorrect) {
     launchConfetti();
@@ -742,32 +811,32 @@ async function chooseAnswer(opt) {
 
   if (state.turn === 'player') {
     if (isCorrect) {
-      banner('答對！命中敵人！');
+      banner('答對了！命中敵人！');
       await playerAttack(true);
       state.enemyHp = clamp(state.enemyHp - 1, 0, state.enemyHpMax);
       updateHp();
       if (state.enemyHp <= 0) return clearEnemy();
-      await sleep(700);
+      await sleep(500);
       await enemyTurn();
     } else {
-      banner('答錯！敵人跳起閃避！');
+      banner('答錯了！敵人跳起閃避！');
       await playerAttack(false);
-      await sleep(700);
+      await sleep(500);
       await enemyTurn();
     }
   } else {
     if (isCorrect) {
-      banner('答對！成功閃避！');
+      banner('答對了！成功閃避！');
       await enemyAttack(false);
-      await sleep(700);
+      await sleep(500);
       await playerTurn();
     } else {
-      banner('答錯！玩家被擊中！');
+      banner('答錯了！被敵人擊中！');
       await enemyAttack(true);
       state.playerHp = clamp(state.playerHp - 1, 0, state.playerHpMax);
       updateHp();
       if (state.playerHp <= 0) return gameOver();
-      await sleep(700);
+      await sleep(500);
       await playerTurn();
     }
   }
@@ -776,26 +845,29 @@ async function chooseAnswer(opt) {
 
 async function timeoutChoice() {
   if (state.busy || state.ended) return;
-  state.busy = true;
   state.canChoose = false;
+  state.busy = true;
   refreshOptionState();
+  highlightButtons(null, false);
   playAudio('wrong.mp3');
+
   if (state.turn === 'player') {
-    banner('超時！敵人跳起閃避！');
+    banner('時間到！敵人跳起閃避！');
     await playerAttack(false);
-    await sleep(700);
+    await sleep(500);
     await enemyTurn();
   } else {
-    banner('超時！玩家被擊中！');
+    banner('時間到！被敵人擊中！');
     await enemyAttack(true);
     state.playerHp = clamp(state.playerHp - 1, 0, state.playerHpMax);
     updateHp();
     if (state.playerHp <= 0) return gameOver();
-    await sleep(700);
+    await sleep(500);
     await playerTurn();
   }
   state.busy = false;
 }
+
 function askQuestion() {
   const count = stageChoices[state.stage];
   renderQuestion(buildQuestion(count));
@@ -804,16 +876,18 @@ function askQuestion() {
   refreshOptionState();
   startTurnCountdown();
 }
-async function playerTurn() {
+
+function playerTurn() {
   if (state.ended) return;
   state.turn = 'player';
-  setTurnLabel('玩家回合：選出正確中文名字');
+  setTurnLabel('⚔️ 玩家回合：答對發動攻擊', false);
   askQuestion();
 }
-async function enemyTurn() {
+
+function enemyTurn() {
   if (state.ended) return;
   state.turn = 'enemy';
-  setTurnLabel('敵人回合：選出正確中文名字');
+  setTurnLabel('🛡️ 敵人回合：答對跳起閃避', true);
   askQuestion();
 }
 
@@ -821,13 +895,13 @@ async function clearEnemy() {
   stopTimer();
   state.canChoose = false;
   refreshOptionState();
-  banner('敵人倒下！');
+  banner('敵人倒下了！');
   els.enemySprite.classList.add('fade-out');
-  await sleep(1200);
+  await sleep(1100);
   els.enemySprite.classList.remove('fade-out');
   els.enemySprite.style.display = 'none';
-  els.enemySprite.style.opacity = '1';
   els.enemySprite.style.visibility = 'hidden';
+
   await playerWalkForward();
 
   state.stage += 1;
@@ -840,28 +914,28 @@ async function clearEnemy() {
   applyStandings();
   updateHp();
   updateStageInfo();
-  await sleep(300);
-  await playerTurn();
+  await sleep(250);
+  playerTurn();
 }
 
 async function playerWalkForward() {
   playTurnSound('player', 'walk');
+  setPose('player', 'walk');
   els.playerSprite.classList.add('walk-across');
-  await setPlayerPose('walk');
-  await sleep(1800);
+  await sleep(1600);
   els.playerSprite.classList.remove('walk-across');
-  els.playerSprite.style.left = window.innerWidth <= 900 ? '12px' : '24px';
-  await setPlayerPose('stand');
-  resetSpriteSide(els.playerSprite);
+  els.playerSprite.style.left = '6%';
+  setPose('player', 'stand');
 }
 
 async function walkToCenterAndCelebrate() {
   playTurnSound('player', 'walk');
+  setPose('player', 'walk');
   els.playerSprite.classList.add('walk-center');
-  await setPlayerPose('walk');
-  await sleep(1800);
-  //els.playerSprite.classList.remove('walk-center');
-  await setPlayerPose('jump');
+  await sleep(1500);
+  els.playerSprite.classList.remove('walk-center');
+  els.playerSprite.style.left = 'calc(50% - clamp(48px, 12vw, 92px))';
+  setPose('player', 'jump');
   els.playerSprite.classList.add('win-jump-loop');
 }
 
@@ -871,32 +945,35 @@ function gameOver() {
   state.canChoose = false;
   state.busy = false;
   refreshOptionState();
-  setTurnLabel('遊戲結束');
-  els.questionText.textContent = '玩家 HP 已歸零';
-  els.timer.textContent = '';
+  setTurnLabel('💔 遊戲結束', true);
+  els.questionEmoji.textContent = '😵';
+  els.questionText.textContent = '體力歸零，再試一次吧！';
+  els.timerText.textContent = '';
+  els.timerFill.style.width = '0%';
   els.options.innerHTML = '';
-  playAudio('lose.mp3');
-  banner('Game Over', 1500);
   els.giveUpBtn.textContent = '重玩';
+  playAudio('lose.mp3');
+  banner('Game Over', 1800);
 }
 
 async function winGame() {
   stopTimer();
   state.ended = true;
-  state.currentRunWon = true;
   state.canChoose = false;
   state.busy = false;
   refreshOptionState();
-  setTurnLabel('恭喜通關🎉');
-  els.questionText.textContent = '你已完成所有關卡！';
-  els.timer.textContent = '';
+  setTurnLabel('🏆 恭喜通關！', false);
+  els.questionEmoji.textContent = '🎉';
+  els.questionText.textContent = '你成功打敗了所有敵人！';
+  els.timerText.textContent = '';
+  els.timerFill.style.width = '100%';
   els.options.innerHTML = '';
   els.giveUpBtn.textContent = '重玩';
   playAudio('win.mp3');
   await walkToCenterAndCelebrate();
   spawnFirework();
-  state.fireworkTimer = setInterval(spawnFirework, 650);
-  banner('Congratulations!', 2000);
+  state.fireworkTimer = setInterval(spawnFirework, 600);
+  banner('Congratulations!', 2200);
 }
 
 function prepareNewGameState() {
@@ -912,7 +989,6 @@ function prepareNewGameState() {
   state.canChoose = false;
   state.busy = false;
   state.ended = false;
-  state.currentRunWon = false;
 }
 
 async function startGame() {
@@ -925,12 +1001,13 @@ async function startGame() {
   updateHp();
   updateStageInfo();
   setTurnLabel('準備開始');
+  els.questionEmoji.textContent = '⏳';
   els.questionText.textContent = '遊戲載入中...';
-  els.timer.textContent = '';
+  els.timerText.textContent = '';
   els.options.innerHTML = '';
   els.giveUpBtn.textContent = '放棄';
   await sleep(200);
-  await playerTurn();
+  playerTurn();
 }
 
 function backToHome() {
@@ -939,30 +1016,34 @@ function backToHome() {
   state.canChoose = false;
   state.busy = false;
   state.ended = false;
-  refreshOptionState();
   resetBattleVisuals();
   setScreen('home');
-  els.questionText.textContent = '準備開始';
-  els.timer.textContent = '';
-  els.options.innerHTML = '';
   els.giveUpBtn.textContent = '放棄';
 }
 
 function bind() {
   els.startBtn.addEventListener('click', startGame);
-  if (els.giveUpBtn) {
-    els.giveUpBtn.addEventListener('click', () => {
-      if (state.ended) {
-        startGame();
-        return;
-      }
-      const ok = confirm('你確定要放棄嗎？');
-      if (ok) backToHome();
-    });
-  }
-  window.addEventListener('resize', () => {
-    setBg(state.stage);
-    if (!state.ended) els.playerSprite.style.left = window.innerWidth <= 900 ? '12px' : '24px';
+
+  els.soundBtn.addEventListener('click', () => {
+    state.audioEnabled = !state.audioEnabled;
+    els.soundBtn.textContent = state.audioEnabled ? '🔊' : '🔇';
+  });
+
+  els.giveUpBtn.addEventListener('click', () => {
+    if (state.ended) {
+      startGame();
+      return;
+    }
+    els.confirmModal.hidden = false;
+  });
+
+  els.confirmCancelBtn.addEventListener('click', () => {
+    els.confirmModal.hidden = true;
+  });
+
+  els.confirmOkBtn.addEventListener('click', () => {
+    els.confirmModal.hidden = true;
+    backToHome();
   });
 }
 
@@ -970,6 +1051,10 @@ function cacheEls() {
   els.homeScreen = byId('homeScreen');
   els.gameScreen = byId('gameScreen');
   els.startBtn = byId('startBtn');
+  els.soundBtn = byId('soundBtn');
+  els.giveUpBtn = byId('giveUpBtn');
+  els.playerNameTag = byId('playerNameTag');
+  els.enemyNameTag = byId('enemyNameTag');
   els.playerSprite = byId('playerSprite');
   els.enemySprite = byId('enemySprite');
   els.battleBg = byId('battleBackground');
@@ -978,14 +1063,18 @@ function cacheEls() {
   els.enemyHp = byId('enemyHp');
   els.stageInfo = byId('stageInfo');
   els.turnLabel = byId('turnLabel');
+  els.questionEmoji = byId('questionEmoji');
   els.questionText = byId('questionText');
-  els.timer = byId('timerText');
+  els.timerText = byId('timerText');
+  els.timerFill = byId('timerFill');
   els.options = byId('optionsGrid');
   els.banner = byId('resultBanner');
-  els.giveUpBtn = byId('giveUpBtn');
   els.battlefield = byId('battlefield');
   els.confettiLayer = byId('confettiLayer');
   els.fireworksLayer = byId('fireworksLayer');
+  els.confirmModal = byId('confirmModal');
+  els.confirmCancelBtn = byId('confirmCancelBtn');
+  els.confirmOkBtn = byId('confirmOkBtn');
 }
 
 async function init() {
@@ -1000,7 +1089,6 @@ async function init() {
   applyStandings();
   updateHp();
   updateStageInfo();
-  els.questionText.textContent = '準備開始';
   await preloadAssets();
 }
 

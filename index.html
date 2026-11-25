@@ -2,75 +2,145 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#5c6bc0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>繁體中文字冒險遊戲</title>
+  <link rel="manifest" href="./app.webmanifest" />
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#8b5cf6">
 </head>
 <body>
   <div id="app">
+    <!-- HOME SCREEN -->
     <section id="homeScreen" class="screen active">
-      <h1>繁體中文字冒險</h1>
-      <div class="home-stage">
-        <div class="tv-frame">
+      <header class="app-header">
+        <span class="badge">快樂認字大挑戰</span>
+        <h1>繁體中文字冒險</h1>
+      </header>
+
+      <div class="tv-chassis home-tv">
+        <div class="tv-bezel">
           <div class="tv-screen" id="homeTvScreen">
-            <div class="cloud-panel">
-              <div class="panel-title">開始設定</div>
-              <div class="option-group">
-                <div class="option-row">
-                  <div class="option-label">角色：</div>
-                  <label><input type="radio" name="character" value="瑪利歐" checked> 瑪利歐</label>
-                  <label><input type="radio" name="character" value="路易吉"> 路易吉</label>
-                </div>
-                <div class="option-row">
-                  <div class="option-label">HP 體力：</div>
-                  <label><input type="radio" name="hpMode" value="10" checked> 充足（10點HP）</label>
-                  <label><input type="radio" name="hpMode" value="5"> 較少（5點HP）</label>
+            <div class="cloud-card">
+              <div class="card-title">開始設定</div>
+
+              <div class="setting-block">
+                <div class="setting-label">選擇角色</div>
+                <div class="pill-group" role="radiogroup" aria-label="角色">
+                  <label class="pill-option">
+                    <input type="radio" name="character" value="瑪利歐" checked />
+                    <span class="pill-face">
+                      <span class="pill-dot mario"></span>
+                      <span>瑪利歐</span>
+                    </span>
+                  </label>
+                  <label class="pill-option">
+                    <input type="radio" name="character" value="路易吉" />
+                    <span class="pill-face">
+                      <span class="pill-dot luigi"></span>
+                      <span>路易吉</span>
+                    </span>
+                  </label>
                 </div>
               </div>
-              <button id="startBtn">開始！</button>
+
+              <div class="setting-block">
+                <div class="setting-label">HP 體力</div>
+                <div class="pill-group" role="radiogroup" aria-label="HP 體力">
+                  <label class="pill-option">
+                    <input type="radio" name="hpMode" value="10" checked />
+                    <span class="pill-face">❤️ 充足 (10 HP)</span>
+                  </label>
+                  <label class="pill-option">
+                    <input type="radio" name="hpMode" value="5" />
+                    <span class="pill-face">💛 挑戰 (5 HP)</span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="startBtn" class="primary-btn" type="button">開始冒險！</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- GAME SCREEN -->
     <section id="gameScreen" class="screen">
-      <div id="battleTv">
-        <div id="gameUi">
-          <div class="top-bar">
-            <div id="playerHp" class="hp-bar"></div>
-            <div id="stageInfo"></div>
-            <div id="enemyHp" class="hp-bar enemy"></div>
+      <div class="tv-chassis game-tv">
+        <div class="tv-bezel">
+          <div class="tv-screen game-viewport">
+            <!-- Top HUD inside the TV screen -->
+            <div class="hud-top">
+              <div class="fighter-hud player">
+                <div class="fighter-name" id="playerNameTag">瑪利歐</div>
+                <div id="playerHp" class="hp-bar" aria-label="玩家體力"></div>
+              </div>
+
+              <div class="hud-center">
+                <div id="stageInfo" class="stage-pill">第 1 關</div>
+                <div class="hud-actions">
+                  <button id="soundBtn" class="icon-btn" type="button" aria-label="音效開關" title="音效開關">🔊</button>
+                  <button id="giveUpBtn" class="danger-btn" type="button">放棄</button>
+                </div>
+              </div>
+
+              <div class="fighter-hud enemy">
+                <div class="fighter-name" id="enemyNameTag">慢慢龜</div>
+                <div id="enemyHp" class="hp-bar enemy" aria-label="敵人體力"></div>
+              </div>
+            </div>
+
+            <!-- Question & Options Card -->
+            <div class="quiz-card">
+              <div class="quiz-meta">
+                <span id="turnLabel" class="turn-badge">玩家回合</span>
+                <span id="timerText" class="timer-pill">⏱ 12 秒</span>
+              </div>
+              <div class="timer-track">
+                <div id="timerFill" class="timer-fill"></div>
+              </div>
+              <div class="prompt-row">
+                <span id="questionEmoji" class="prompt-emoji" aria-hidden="true">🐼</span>
+                <span id="questionText" class="prompt-text">請選出正確的中文名字</span>
+              </div>
+              <div id="optionsGrid" class="options-grid"></div>
+            </div>
+
+            <!-- Battle Stage -->
+            <div id="battlefield">
+              <div id="battleBackground"></div>
+              <div id="fireworksLayer"></div>
+              <div id="confettiLayer"></div>
+              <div id="playerSprite" class="sprite player"></div>
+              <div id="enemySprite" class="sprite enemy"></div>
+              <img id="projectile" alt="" />
+              <div id="resultBanner" role="status" aria-live="polite"></div>
+            </div>
           </div>
-          <div class="question-box">
-            <div id="turnLabel"></div>
-            <div id="timerText"></div>
-            <div id="questionText" style="text-align: center;"></div>
-            <div id="optionsGrid" style="text-align: center;"></div>
-          </div>
-        </div>
-        <div id="battlefield">
-          <div id="battleBackground"></div>
-          <div id="fireworksLayer"></div>
-          <div id="confettiLayer"></div>
-          <div id="playerSprite" class="sprite"></div>
-          <div id="enemySprite" class="sprite enemy"></div>
-          <img id="projectile" alt="projectile" />
-          <button id="giveUpBtn" class="give-up-btn">放棄</button>
-          <div id="resultBanner"></div>
         </div>
       </div>
     </section>
   </div>
+
+  <!-- Custom Confirm Modal (cleaner than native browser confirm on mobile) -->
+  <div id="confirmModal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div id="confirmTitle" class="modal-title">確定要放棄目前進度嗎？</div>
+      <div class="modal-actions">
+        <button id="confirmCancelBtn" class="modal-btn cancel" type="button">繼續遊戲</button>
+        <button id="confirmOkBtn" class="modal-btn confirm" type="button">返回主頁</button>
+      </div>
+    </div>
+  </div>
+
   <script src="game.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js")
-          .catch(err => console.error("SW 註冊失敗:", err));
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
       });
     }
   </script>
